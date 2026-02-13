@@ -42,10 +42,25 @@
           controls
         ></video>
       </div>
+      <div class="row">
+        <div>
+          <label>Select audio input: </label>
+          <select id="audio-input"></select>
+        </div>
+        <div>
+          <label>Select audio output: </label>
+          <select id="audio-output"></select>
+        </div>
+        <div>
+          <label>Select video input: </label>
+          <select id="video-input"></select>
+        </div>
+      </div>
     </div>
   </body>
   <script src="/socket.io/socket.io.js"></script>
   <script src="scripts.js"></script>
   <script src="stunServers.js"></script>
   <script src="socketConnect.js"></script>
+  <script src="userDevices.js"></script>
 </html>

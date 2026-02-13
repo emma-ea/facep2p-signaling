@@ -1,5 +1,11 @@
 const localVideoEl = document.querySelector("#local-video");
 const remoteVideoEl = document.querySelector("#remote-video");
+
+// media controls
+const audioInsSelectorEl = document.querySelector("#audio-input");
+const audioOutSelectorEl = document.querySelector("#audio-output");
+const videoFeedsEl = document.querySelector("#video-input");
+
 // username + password
 let username = `DOE-${crypto.randomUUID().split("-")[0]}`;
 const password = "x";
@@ -120,6 +126,10 @@ const hangup = (e) => {
     t.stop();
   });
 };
+
+audioInsSelectorEl.addEventListener("change", (e) => changeAudioInput(e));
+audioOutSelectorEl.addEventListener("change", (e) => changeAudioOutput(e));
+videoFeedsEl.addEventListener("change", (e) => changeVideoInput(e));
 
 document.querySelector("#call").addEventListener("click", call);
 document.querySelector("#hangup").addEventListener("click", hangup);
