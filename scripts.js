@@ -100,7 +100,7 @@ const createPeerConnection = async (offerObj) => {
         socket.emit("new-ice-candidates", {
           iceCandidate: e.candidate,
           iceUsername: username,
-          didIOffer: true,
+          didIOffer: offerObj ? false : true,
         });
       }
     });
