@@ -1,4 +1,4 @@
-const socket = io.connect("https://localhost:3001/", {
+const socket = io.connect("https://172.20.10.2:3001/", {
   auth: {
     username,
     password,

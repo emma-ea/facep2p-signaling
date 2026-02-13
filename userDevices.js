@@ -62,7 +62,7 @@ const changeVideoInput = async (e) => {
   localStream = await navigator.mediaDevices.getUserMedia(newConstraints);
   localVideoEl.srcObject = localStream;
   localStream.getTracks().forEach((track) => {
-    peerConnection.addTrack(track, localStream);
+    localStream.addTrack(track, localStream);
   });
 };
 

@@ -19,7 +19,7 @@ document.querySelector("#user-name").innerHTML = username;
 const call = async (e) => {
   await fetchUserMedia();
   await createPeerConnection();
-
+  fetchUserDevices();
   try {
     console.log("-- creating offer --"); // send offer to other side
     const offer = await peerConnection.createOffer();
@@ -34,7 +34,7 @@ const fetchUserMedia = () => {
   return new Promise(async (resolve, reject) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
+        audio: true,
         video: true,
       });
 
@@ -52,6 +52,7 @@ const answerOffer = async (offer) => {
   console.log("answer offer");
   await fetchUserMedia();
   await createPeerConnection(offer);
+  fetchUserDevices();
   const answer = await peerConnection.createAnswer({});
   await peerConnection.setLocalDescription(answer);
   offer.answer = answer;
