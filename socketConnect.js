@@ -19,6 +19,16 @@ socket.on("new-offer-awaiting", (newOffer, callbacak) => {
   createOfferEls(newOffer);
 });
 
+socket.on("answer-response", (offerObj, callback) => {
+  console.log(offerObj);
+  addAnswer(offerObj);
+});
+
+socket.on("receive-ice-candidates", (iceCandidates, callback) => {
+  console.log(iceCandidates);
+  addNewIceCandidate(iceCandidates);
+});
+
 const createOfferEls = (offers) => {
   const answerEl = document.querySelector("#answer");
   offers.forEach((offer) => {

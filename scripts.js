@@ -18,7 +18,6 @@ const call = async (e) => {
     console.log("-- creating offer --"); // send offer to other side
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
-    console.log(JSON.stringify(offer));
     socket.emit("new-offer", offer);
   } catch (err) {
     console.error(err);
@@ -49,17 +48,34 @@ const answerOffer = async (offer) => {
   await createPeerConnection(offer);
   const answer = await peerConnection.createAnswer({});
   await peerConnection.setLocalDescription(answer);
-  socket.emit("push-answerer-offer", {
-    answerOffer: answer,
-    answererUsername: offer.offererUsername,
-    username: username,
+  offer.answer = answer;
+  const offerIceCandidates = await socket.emitWithAck(
+    "push-answerer-offer",
+    offer,
+  );
+  offerIceCandidates.forEach((ice) => {
+    peerConnection.addIceCandidate(ice);
   });
+  console.log("----- added ice candidate ------");
   console.log(answer);
+};
+
+const addAnswer = async (offerObj) => {
+  await peerConnection.setRemoteDescription(offerObj.answer);
+};
+
+const addNewIceCandidate = async (iceCandidate) => {
+  console.log(iceCandidate);
+  peerConnection.addIceCandidate(iceCandidate);
+  console.log("----- added ice candidate ------");
 };
 
 const createPeerConnection = async (offerObj) => {
   return new Promise(async (resolve, reject) => {
     peerConnection = new RTCPeerConnection(peerConfiguration);
+
+    remoteStream = new MediaStream();
+    remoteVideoEl.srcObject = remoteStream;
 
     localStream.getTracks().forEach((track) => {
       peerConnection.addTrack(track, localStream);
@@ -74,13 +90,20 @@ const createPeerConnection = async (offerObj) => {
       console.log("-- ice candidate found --");
       if (e.candidate) {
         console.log(e);
-        console.log(JSON.stringify(e.candidate));
         socket.emit("new-ice-candidates", {
           iceCandidate: e.candidate,
           iceUsername: username,
           didIOffer: true,
         });
       }
+    });
+
+    peerConnection.addEventListener("track", (ev) => {
+      console.log("--------- Got a track -------- ");
+      console.log(ev);
+      ev.streams[0].getTracks().forEach((track) => {
+        remoteStream.addTrack(track, remoteStream);
+      });
     });
 
     if (offerObj) {
