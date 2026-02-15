@@ -24,7 +24,7 @@ const call = async (e) => {
     console.log("-- creating offer --"); // send offer to other side
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
-    socket.emit("new-offer", offer);
+    socket.emit("new-offer", JSON.stringify(offer));
   } catch (err) {
     console.error(err);
   }
@@ -58,17 +58,19 @@ const answerOffer = async (offer) => {
   offer.answer = answer;
   const offerIceCandidates = await socket.emitWithAck(
     "push-answerer-offer",
-    offer,
+    JSON.stringify(offer),
   );
+  console.log("----- added ice candidate 0 ------", offerIceCandidates);
+  console.log(offerIceCandidates);
   offerIceCandidates.forEach((ice) => {
     peerConnection.addIceCandidate(ice);
   });
-  console.log("----- added ice candidate ------");
+  console.log("----- added ice candidate 1 ------");
   console.log(answer);
 };
 
 const addAnswer = async (offerObj) => {
-  await peerConnection.setRemoteDescription(offerObj.answer);
+  await peerConnection.setRemoteDescription(offerObj.answerer);
 };
 
 const addNewIceCandidate = async (iceCandidate) => {
@@ -97,11 +99,14 @@ const createPeerConnection = async (offerObj) => {
       console.log("-- ice candidate found --");
       if (e.candidate) {
         console.log(e);
-        socket.emit("new-ice-candidates", {
-          iceCandidate: e.candidate,
-          iceUsername: username,
-          didIOffer: offerObj ? false : true,
-        });
+        socket.emit(
+          "new-ice-candidates",
+          JSON.stringify({
+            iceCandidate: e.candidate,
+            iceUsername: username,
+            didIOffer: offerObj ? false : true,
+          }),
+        );
       }
     });
 
@@ -114,7 +119,7 @@ const createPeerConnection = async (offerObj) => {
     });
 
     if (offerObj) {
-      await peerConnection.setRemoteDescription(offerObj.offer);
+      await peerConnection.setRemoteDescription(JSON.parse(offerObj.offer));
     }
 
     resolve();

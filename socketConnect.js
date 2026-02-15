@@ -1,5 +1,9 @@
-const socket = io.connect("https://172.20.10.2:3001/", {
+const socket = io("ws://localhost:9191/", {
   auth: {
+    username,
+    password,
+  },
+  query: {
     username,
     password,
   },
@@ -15,8 +19,8 @@ socket.on("available-offers", (offers, callback) => {
 });
 
 socket.on("new-offer-awaiting", (newOffer, callbacak) => {
-  console.log("new offer", JSON.stringify(newOffer));
-  createOfferEls(newOffer);
+  console.log("new offer", newOffer);
+  createOfferEls([JSON.parse(newOffer)]);
 });
 
 socket.on("answer-response", (offerObj, callback) => {

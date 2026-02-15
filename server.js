@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 const https = require("https");
 const express = require("express");
 const socketio = require("socket.io");
@@ -7,145 +8,147 @@ const key = fs.readFileSync("cert.key");
 const cert = fs.readFileSync("cert.crt");
 
 const app = express();
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname)));
 
-const expressServer = https.createServer({ key, cert }, app);
-const io = socketio(expressServer);
+app.listen(3001);
 
-expressServer.listen(3001);
+// const expressServer = https.createServer({ key, cert }, app);
+// const io = socketio(expressServer);
 
-const offers = [
-  // offererUsername,
-  // offer,
-  // offererIceCandidates,
-  // answerer
-  // answererOffer,
-  // answererIceCandidates
-];
+// expressServer.listen(3001);
 
-const connectedSockets = [
-  // username, socketid
-];
+// const offers = [
+//   // offererUsername,
+//   // offer,
+//   // offererIceCandidates,
+//   // answerer
+//   // answererOffer,
+//   // answererIceCandidates
+// ];
 
-io.on("connection", (socket) => {
-  console.log("client connected");
+// const connectedSockets = [
+//   // username, socketid
+// ];
 
-  const username = socket.handshake.auth.username;
-  const password = socket.handshake.auth.password;
+// io.on("connection", (socket) => {
+//   console.log("client connected");
 
-  if (password !== "x") {
-    socket.disconnect(true);
-    return;
-  }
+//   const username = socket.handshake.auth.username;
+//   const password = socket.handshake.auth.password;
 
-  connectedSockets.push({
-    socketId: socket.id,
-    username: username,
-  });
+//   if (password !== "x") {
+//     socket.disconnect(true);
+//     return;
+//   }
 
-  if (offers.length) {
-    socket.emit("available-offers", offers);
-  }
+//   connectedSockets.push({
+//     socketId: socket.id,
+//     username: username,
+//   });
 
-  socket.on("new-offer", (newOffer, callback) => {
-    console.log("receiving new offer");
-    // console.log(newOffer);
-    offers.push({
-      offererUsername: username,
-      offer: newOffer,
-      offererIceCandidates: [],
-      answererUsername: null,
-      answer: null,
-      answererIceCandidates: [],
-    });
+//   if (offers.length) {
+//     socket.emit("available-offers", offers);
+//   }
 
-    console.log(`offers: ${offers.length}`);
+//   socket.on("new-offer", (newOffer, callback) => {
+//     console.log("receiving new offer");
+//     // console.log(newOffer);
+//     offers.push({
+//       offererUsername: username,
+//       offer: newOffer,
+//       offererIceCandidates: [],
+//       answererUsername: null,
+//       answer: null,
+//       answererIceCandidates: [],
+//     });
 
-    // broadcast
-    socket.broadcast.emit("new-offer-awaiting", offers.slice(-1));
-  });
+//     console.log(`offers: ${offers.length}`);
 
-  // send ice candidate to signaling server
-  socket.on("new-ice-candidates", (ice, callback) => {
-    const { iceCandidate, iceUsername, didIOffer } = ice;
-    // this ice is coming from offerer, send to answerer
-    // todo: check
-    if (didIOffer) {
-      console.log("----------- didIOffer offer ----------");
-      const foundOffer = offers.find(
-        (of) => of.offererUsername === iceUsername,
-      );
-      if (foundOffer) {
-        console.log("----------- found offer ----------");
-        foundOffer.offererIceCandidates.push(iceCandidate);
-        // any candidate coming after the offer has been answered
-        if (foundOffer.answererUsername) {
-          const socketSendTo = connectedSockets.find(
-            (s) => s.username === foundOffer.answererUsername,
-          );
-          if (socketSendTo) {
-            console.log("----------- send to answerer offer ----------");
-            socket
-              .to(socketSendTo.socketId)
-              .emit("receive-ice-candidates", iceCandidate);
-          }
-        }
-      }
-    } else {
-      // this ice is coming from answerer, send to offerer
-      console.log("----------- send to answerer from offerer ----------");
-      const foundOffer = offers.find(
-        (of) => of.answererUsername === iceUsername,
-      );
-      const socketSendTo = connectedSockets.find(
-        (s) => s.username === foundOffer.offererUsername,
-      );
-      if (socketSendTo) {
-        console.log(
-          "----------- send to ice candidate from to answerer ----------",
-        );
-        socket
-          .to(socketSendTo.socketId)
-          .emit("receive-ice-candidates", iceCandidate);
-      } else {
-        console.log("ice candidate received but could not find offerer");
-      }
-    }
-  });
+//     // broadcast
+//     socket.broadcast.emit("new-offer-awaiting", offers.slice(-1));
+//   });
 
-  socket.on("push-answerer-offer", (offer, callback) => {
-    // const { answerOffer, answererUsername, username } = offer;
-    // const foundOffer = offers.find((of) => of.offererUsername === username);
-    // foundOffer.answererUsername = answererUsername;
-    // foundOffer.answer = answerOffer;
+//   // send ice candidate to signaling server
+//   socket.on("new-ice-candidates", (ice, callback) => {
+//     const { iceCandidate, iceUsername, didIOffer } = ice;
+//     // this ice is coming from offerer, send to answerer
+//     // todo: check
+//     if (didIOffer) {
+//       console.log("----------- didIOffer offer ----------");
+//       const foundOffer = offers.find(
+//         (of) => of.offererUsername === iceUsername,
+//       );
+//       if (foundOffer) {
+//         console.log("----------- found offer ----------");
+//         foundOffer.offererIceCandidates.push(iceCandidate);
+//         // any candidate coming after the offer has been answered
+//         if (foundOffer.answererUsername) {
+//           const socketSendTo = connectedSockets.find(
+//             (s) => s.username === foundOffer.answererUsername,
+//           );
+//           if (socketSendTo) {
+//             console.log("----------- send to answerer offer ----------");
+//             socket
+//               .to(socketSendTo.socketId)
+//               .emit("receive-ice-candidates", iceCandidate);
+//           }
+//         }
+//       }
+//     } else {
+//       // this ice is coming from answerer, send to offerer
+//       console.log("----------- send to answerer from offerer ----------");
+//       const foundOffer = offers.find(
+//         (of) => of.answererUsername === iceUsername,
+//       );
+//       const socketSendTo = connectedSockets.find(
+//         (s) => s.username === foundOffer.offererUsername,
+//       );
+//       if (socketSendTo) {
+//         console.log(
+//           "----------- send to ice candidate from to answerer ----------",
+//         );
+//         socket
+//           .to(socketSendTo.socketId)
+//           .emit("receive-ice-candidates", iceCandidate);
+//       } else {
+//         console.log("ice candidate received but could not find offerer");
+//       }
+//     }
+//   });
 
-    console.log("found offer", JSON.stringify(offer));
+//   socket.on("push-answerer-offer", (offer, callback) => {
+//     // const { answerOffer, answererUsername, username } = offer;
+//     // const foundOffer = offers.find((of) => of.offererUsername === username);
+//     // foundOffer.answererUsername = answererUsername;
+//     // foundOffer.answer = answerOffer;
 
-    const socketToAnswer = connectedSockets.find(
-      (s) => s.username === offer.offererUsername,
-    );
+//     console.log("found offer", JSON.stringify(offer));
 
-    if (!socketToAnswer) {
-      console.log("No matching sockets found");
-      return;
-    }
+//     const socketToAnswer = connectedSockets.find(
+//       (s) => s.username === offer.offererUsername,
+//     );
 
-    const socketIdToAnswer = socketToAnswer.socketId;
+//     if (!socketToAnswer) {
+//       console.log("No matching sockets found");
+//       return;
+//     }
 
-    const offerToUpdate = offers.find(
-      (o) => o.offererUsername === offer.offererUsername,
-    );
-    if (!offerToUpdate) {
-      console.log("No offer to update");
-      return;
-    }
+//     const socketIdToAnswer = socketToAnswer.socketId;
 
-    // send back to answerer all ice candidates collected.
-    callback(offerToUpdate.offererIceCandidates);
+//     const offerToUpdate = offers.find(
+//       (o) => o.offererUsername === offer.offererUsername,
+//     );
+//     if (!offerToUpdate) {
+//       console.log("No offer to update");
+//       return;
+//     }
 
-    offerToUpdate.answer = offer.answer;
-    offerToUpdate.answererUsername = username;
+//     // send back to answerer all ice candidates collected.
+//     callback(offerToUpdate.offererIceCandidates);
 
-    socket.to(socketIdToAnswer).emit("answer-response", offerToUpdate);
-  });
-});
+//     offerToUpdate.answer = offer.answer;
+//     offerToUpdate.answererUsername = username;
+
+//     socket.to(socketIdToAnswer).emit("answer-response", offerToUpdate);
+//   });
+// });
