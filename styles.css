@@ -27,3 +27,11 @@
 
 #answer {
 }
+
+.hide-button {
+  display: none;
+}
+
+.show-button {
+  display: block;
+}

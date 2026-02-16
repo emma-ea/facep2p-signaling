@@ -6,6 +6,10 @@ const audioInsSelectorEl = document.querySelector("#audio-input");
 const audioOutSelectorEl = document.querySelector("#audio-output");
 const videoFeedsEl = document.querySelector("#video-input");
 
+const shareScreenEl = document.querySelector("#screen-share");
+
+let screenSharing = false;
+
 // username + password
 let username = `DOE-${crypto.randomUUID().split("-")[0]}`;
 const password = "x";
@@ -65,7 +69,8 @@ const answerOffer = async (offer) => {
   offerIceCandidates.forEach((ice) => {
     peerConnection.addIceCandidate(ice);
   });
-  console.log("----- added ice candidate 1 ------");
+  dida;
+  console.log("----- added ice cante 1 ------");
   console.log(answer);
 };
 
@@ -131,11 +136,32 @@ const hangup = (e) => {
   localStream.getTracks().forEach((t) => {
     t.stop();
   });
+  if (peerConnection.signalingState !== "closed") {
+    console.log("closing peer connection");
+    peerConnection.close();
+    remoteStream = null;
+    remoteVideoEl.srcObject = null;
+    localVideoEl.srcObject = null;
+    localStream = null;
+    socket.emit("remove-rtc-client", username);
+  }
 };
 
 audioInsSelectorEl.addEventListener("change", (e) => changeAudioInput(e));
 audioOutSelectorEl.addEventListener("change", (e) => changeAudioOutput(e));
 videoFeedsEl.addEventListener("change", (e) => changeVideoInput(e));
+
+shareScreenEl.addEventListener("click", async (e) => {
+  if (!screenSharing) {
+    shareScreenEl.innerHTML = "Stop screen sharing";
+    shareLocalScreen(e);
+  } else {
+    shareScreenEl.innerHTML = "Share screen";
+    await fetchUserMedia();
+    await updatePeerWithLocalStream("video");
+  }
+  screenSharing = !screenSharing;
+});
 
 document.querySelector("#call").addEventListener("click", call);
 document.querySelector("#hangup").addEventListener("click", hangup);

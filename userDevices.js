@@ -38,6 +38,7 @@ const changeAudioInput = async (e) => {
 
   try {
     localStream = await navigator.mediaDevices.getUserMedia(newConstraints);
+    updatePeerWithLocalStream("audio");
   } catch (err) {
     console.error(err);
   }
@@ -45,6 +46,7 @@ const changeAudioInput = async (e) => {
 
 const changeAudioOutput = async (e) => {
   await videoEl.setSinkId(e.target.value);
+  // updatePeerWithLocalStream();
 };
 
 const changeVideoInput = async (e) => {
@@ -61,9 +63,33 @@ const changeVideoInput = async (e) => {
 
   localStream = await navigator.mediaDevices.getUserMedia(newConstraints);
   localVideoEl.srcObject = localStream;
-  localStream.getTracks().forEach((track) => {
-    localStream.addTrack(track, localStream);
-  });
+  updatePeerWithLocalStream("video");
+};
+
+const shareLocalScreen = async (e) => {
+  const mediaConstraints = {
+    surfaceSwitching: "include",
+    audio: false,
+    video: true,
+  };
+  const displayVideoStream =
+    await navigator.mediaDevices.getDisplayMedia(mediaConstraints);
+  localStream = displayVideoStream;
+  localVideoEl.srcObject = localStream;
+  await updatePeerWithLocalStream("video");
+};
+
+const updatePeerWithLocalStream = async (ttype) => {
+  const track =
+    ttype === "video"
+      ? peerConnection.getVideoTracks()[0]
+      : peerConnection.getAudioTracks()[0];
+  const sender = peerConnection.getSenders((s) => s.track?.kind === ttype);
+  if (sender) {
+    await sender.replaceTrack(track);
+  } else {
+    console.log("Cannot replace track, ", track);
+  }
 };
 
 const clearUserDevices = () => {
