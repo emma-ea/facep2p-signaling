@@ -7,8 +7,10 @@ const audioOutSelectorEl = document.querySelector("#audio-output");
 const videoFeedsEl = document.querySelector("#video-input");
 
 const shareScreenEl = document.querySelector("#screen-share");
+const recordScreenEl = document.querySelector("#screen-record");
 
 let screenSharing = false;
+let recordingScreen = false;
 
 // username + password
 let username = `DOE-${crypto.randomUUID().split("-")[0]}`;
@@ -161,6 +163,15 @@ shareScreenEl.addEventListener("click", async (e) => {
     await updatePeerWithLocalStream("video");
   }
   screenSharing = !screenSharing;
+});
+
+recordScreenEl.addEventListener("click", (e) => {
+  if (recordingScreen) {
+    stopRecord(e);
+  } else {
+    startRecord(e);
+  }
+  recordingScreen = !recordingScreen;
 });
 
 document.querySelector("#call").addEventListener("click", call);
